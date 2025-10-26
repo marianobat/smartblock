@@ -1,17 +1,26 @@
-// Generador C++ para Arduino (con control/logic/math básicos)
+// generator.js — Arduino C++ (mínimo funcional)
+
 const Arduino = new Blockly.Generator('Arduino');
 
+// Orden básico para expresiones
 Arduino.ORDER_ATOMIC = 0;
 
-Arduino.addReservedWords('setup,loop,if,while,for,int,float,bool,boolean,digitalWrite,digitalRead,analogRead,pinMode,delay,OUTPUT,INPUT,true,false');
+// Palabras reservadas típicas en C++/Arduino
+Arduino.addReservedWords(
+  'setup,loop,if,while,for,int,float,bool,boolean,'+
+  'digitalWrite,digitalRead,analogRead,pinMode,delay,'+
+  'OUTPUT,INPUT,INPUT_PULLUP,HIGH,LOW,true,false'
+);
 
-Arduino.init = function(workspace) {
-  Arduino.setups_ = Object.create(null);
+// Se llama antes de traducir el workspace
+Arduino.init = function (_workspace) {
+  Arduino.setups_ = Object.create(null); // acumula líneas para setup()
 };
 
-Arduino.finish = function(code) {
+// Ensambla el sketch final
+Arduino.finish = function (codeBody) {
   const setupLines = Object.values(Arduino.setups_).join('') || '';
-  const loopBody = code || '  // (vacío)\n';
+  const loopBody = codeBody || '  // (vacío)\n';
   return `#include <Arduino.h>
 
 void setup() {
@@ -21,73 +30,93 @@ void loop() {
 ${loopBody}}`;
 };
 
-Arduino.scrub_ = function(block, code) {
-  const nextBlock = block && block.nextConnection && block.nextConnection.targetBlock();
-  const nextCode = Arduino.blockToCode(nextBlock);
+// Encadena statements
+Arduino.scrub_ = function (block, code) {
+  const next = block && block.nextConnection && block.nextConnection.targetBlock();
+  const nextCode = Arduino.blockToCode(next);
   return code + (nextCode || '');
 };
 
-Arduino.statementToCode = function(block, name) {
+// Helpers para leer inputs/values de otros bloques (fallback simple)
+Arduino.statementToCode = function (block, name) {
   const target = block && block.getInputTargetBlock && block.getInputTargetBlock(name);
+  if (!target) return '';
   let code = Arduino.blockToCode(target);
   if (Array.isArray(code)) code = code[0];
-  return code ? code : '';
+  return code || '';
 };
-Arduino.valueToCode = function(block, name) {
+Arduino.valueToCode = function (block, name) {
   const target = block && block.getInputTargetBlock && block.getInputTargetBlock(name);
+  if (!target) return '';
   let code = Arduino.blockToCode(target);
   if (Array.isArray(code)) code = code[0];
   return code || '';
 };
 
-/* Bloques propios */
-Arduino['digital_write_pin'] = function(block) {
+/* ===================== TUS BLOQUES ===================== */
+
+// escribir pin (digital)
+Arduino['digital_write_pin'] = function (block) {
   const pin = block.getFieldValue('PIN');
-  const state = block.getFieldValue('STATE');
+  const state = block.getFieldValue('STATE'); // HIGH|LOW
   Arduino.setups_['pin_'+pin+'_out'] = `  pinMode(${pin}, OUTPUT);\n`;
   return `  digitalWrite(${pin}, ${state});\n`;
 };
-Arduino['delay_ms'] = function(block) {
+
+// delay en ms
+Arduino['delay_ms'] = function (block) {
   const t = block.getFieldValue('MS') || 0;
   return `  delay(${t});\n`;
 };
-Arduino['analog_read_pin'] = function(block) {
+
+// leer analógico (expresión)
+Arduino['analog_read_pin'] = function (block) {
   const apin = block.getFieldValue('APIN') || 'A0';
   return [`analogRead(${apin})`, Arduino.ORDER_ATOMIC];
 };
 
-/* Control / lógica / math básicos */
-Arduino['controls_repeat_ext'] = function(block) {
-  let repeats = Arduino.valueToCode(block, 'TIMES') || block.getFieldValue('TIMES') || '10';
-  const branch = Arduino.statementToCode(block, 'DO');
-  return `  for (int _i=0; _i<(${repeats}); _i++) {\n${branch}  }\n`;
+/* =============== CONTROL / LÓGICA / MATH =============== */
+
+// repetir (N) veces
+Arduino['controls_repeat_ext'] = function (block) {
+  const N = Arduino.valueToCode(block, 'TIMES') || block.getFieldValue('TIMES') || '10';
+  const body = Arduino.statementToCode(block, 'DO');
+  return `  for (int _i = 0; _i < (${N}); _i++) {\n${body}  }\n`;
 };
-Arduino['controls_if'] = function(block) {
-  let n = 0, code = '', cond, branch;
+
+// if / else if / else
+Arduino['controls_if'] = function (block) {
+  let n = 0, code = '';
   do {
-    cond = Arduino.valueToCode(block, 'IF' + n) || 'false';
-    branch = Arduino.statementToCode(block, 'DO' + n);
-    code += (n === 0 ? '  if' : '  else if') + ` (${cond}) {\n${branch}  }\n`;
+    const cond = Arduino.valueToCode(block, 'IF' + n) || 'false';
+    const body = Arduino.statementToCode(block, 'DO' + n);
+    code += (n === 0 ? '  if' : '  else if') + ` (${cond}) {\n${body}  }\n`;
     n++;
   } while (block.getInput('IF' + n));
   if (block.getInput('ELSE')) {
-    branch = Arduino.statementToCode(block, 'ELSE');
-    code += `  else {\n${branch}  }\n`;
+    const elseBody = Arduino.statementToCode(block, 'ELSE');
+    code += `  else {\n${elseBody}  }\n`;
   }
   return code;
 };
-Arduino['logic_compare'] = function(block) {
-  const OPS = {EQ:'==',NEQ:'!=',LT:'<',LTE:'<=',GT:'>',GTE:'>='};
+
+// A == B, >, <, etc.
+Arduino['logic_compare'] = function (block) {
+  const OPS = { EQ:'==', NEQ:'!=', LT:'<', LTE:'<=', GT:'>', GTE:'>=' };
   const op = OPS[block.getFieldValue('OP')] || '==';
   const A = Arduino.valueToCode(block, 'A') || '0';
   const B = Arduino.valueToCode(block, 'B') || '0';
   return [`(${A} ${op} ${B})`, Arduino.ORDER_ATOMIC];
 };
-Arduino['logic_boolean'] = function(block) {
+
+// true / false
+Arduino['logic_boolean'] = function (block) {
   return [block.getFieldValue('BOOL') === 'TRUE' ? 'true' : 'false', Arduino.ORDER_ATOMIC];
 };
-Arduino['math_number'] = function(block) {
+
+// número
+Arduino['math_number'] = function (block) {
   return [block.getFieldValue('NUM') || '0', Arduino.ORDER_ATOMIC];
 };
 
-window.Arduino = Arduino;
+window.Arduino = Arduino; // ¡exportar!
