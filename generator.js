@@ -1,14 +1,15 @@
-// generator.js — Arduino C++ (mínimo funcional)
+// generator.js — Arduino C++ (mínimo funcional con CONTROL/LÓGICA/MATH)
 
+// Crea un generador llamado "Arduino"
 const Arduino = new Blockly.Generator('Arduino');
 
-// Orden básico para expresiones
+// Prioridad básica de expresiones
 Arduino.ORDER_ATOMIC = 0;
 
-// Palabras reservadas típicas en C++/Arduino
+// Palabras reservadas típicas
 Arduino.addReservedWords(
-  'setup,loop,if,while,for,int,float,bool,boolean,'+
-  'digitalWrite,digitalRead,analogRead,pinMode,delay,'+
+  'setup,loop,if,while,for,int,float,bool,boolean,' +
+  'digitalWrite,digitalRead,analogRead,pinMode,delay,' +
   'OUTPUT,INPUT,INPUT_PULLUP,HIGH,LOW,true,false'
 );
 
@@ -30,14 +31,14 @@ void loop() {
 ${loopBody}}`;
 };
 
-// Encadena statements
+// Encadenar statements
 Arduino.scrub_ = function (block, code) {
   const next = block && block.nextConnection && block.nextConnection.targetBlock();
   const nextCode = Arduino.blockToCode(next);
   return code + (nextCode || '');
 };
 
-// Helpers para leer inputs/values de otros bloques (fallback simple)
+// Helpers genéricos para leer inputs/values de otros bloques
 Arduino.statementToCode = function (block, name) {
   const target = block && block.getInputTargetBlock && block.getInputTargetBlock(name);
   if (!target) return '';
@@ -77,7 +78,7 @@ Arduino['analog_read_pin'] = function (block) {
 
 /* =============== CONTROL / LÓGICA / MATH =============== */
 
-// repetir (N) veces
+// repetir (N) veces  ←—— ESTA ES LA QUE TE FALTABA
 Arduino['controls_repeat_ext'] = function (block) {
   const N = Arduino.valueToCode(block, 'TIMES') || block.getFieldValue('TIMES') || '10';
   const body = Arduino.statementToCode(block, 'DO');
@@ -119,4 +120,4 @@ Arduino['math_number'] = function (block) {
   return [block.getFieldValue('NUM') || '0', Arduino.ORDER_ATOMIC];
 };
 
-window.Arduino = Arduino; // ¡exportar!
+window.Arduino = Arduino; // exportar
