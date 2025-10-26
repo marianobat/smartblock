@@ -69,3 +69,47 @@ button:hover {
   white-space: pre-wrap;
   min-height: 200px;
 }
+
+/* —— Títulos en negro —— */
+.brand h1,
+.subtitle,
+h3 {
+  color: #000;            /* títulos y subtítulos negros */
+}
+
+/* —— Toolbox: categorías en negro y más grandes —— */
+.blocklyToolboxDiv .blocklyTreeLabel {
+  color: #000 !important;       /* texto de la categoría en negro */
+  font-weight: 700;
+  font-size: 15px;              /* +1 tamaño */
+  letter-spacing: .2px;
+}
+
+/* Altura/espaciado mayor en cada fila de categoría */
+.blocklyToolboxDiv .blocklyTreeRow {
+  height: 40px;                 /* más alto */
+  padding: 10px 12px;           /* más padding */
+  border-radius: 8px;           /* bordes suaves */
+  margin: 2px 6px;              /* separarlas un poco */
+}
+
+/* Resaltado al hover/selección para “más visibles” */
+.blocklyToolboxDiv .blocklyTreeRow:hover {
+  background: #f2f4f8 !important;
+}
+.blocklyToolboxDiv .blocklyTreeSelected {
+  background: #e9eef9 !important;
+}
+
+/* (Opcional) Hacer más visible el panel de flyout */
+.blocklyFlyoutBackground {
+  fill: #f7f8fa !important;     /* fondo clarito detrás de los bloques */
+  fill-opacity: 1 !important;
+  stroke: #e6e9ef !important;
+  stroke-width: 1px !important;
+}
+
+/* (Opcional) Asegurar buen contraste del texto dentro de bloques */
+.blocklyText {
+  fill: #0b0b0b !important;
+}
