@@ -56,7 +56,7 @@ function setupBlockly(){
     </statement>
   </block>
 </xml>`;
-  const dom = Blockly.Xml.textToDom(xmlText);
+const dom = Blockly.utils.xml.textToDom(xmlText);
   Blockly.Xml.domToWorkspace(dom, workspace);
 }
 
