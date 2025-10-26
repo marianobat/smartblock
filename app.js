@@ -97,3 +97,43 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('serial-send')?.addEventListener('click', ()=>{ const cmd=$('serial-input')?.value||''; if(cmd) sendSerial(cmd); });
   $('btn-test-led')?.addEventListener('click', async ()=>{ await sendSerial('W 13 H'); setTimeout(()=>sendSerial('W 13 L'), 600); });
 });
+
+function ensureSingletonTopBlock(type, x, y) {
+  const existing = workspace.getAllBlocks(false).find(b => b.type === type);
+  if (existing) return existing;
+  const block = workspace.newBlock(type);
+  block.initSvg();
+  block.render();
+  block.moveBy(x, y);
+  return block;
+}
+
+function autoPlaceSetupLoop() {
+  // Coloca setup y loop si no están
+  ensureSingletonTopBlock('arduino_setup', 50, 30);
+  ensureSingletonTopBlock('arduino_loop', 50, 180);
+}
+
+function preventDuplicates() {
+  workspace.addChangeListener(function(e) {
+    if (e.type !== Blockly.Events.BLOCK_CREATE) return;
+    const ids = e.ids || [];
+    ids.forEach(id => {
+      const b = workspace.getBlockById(id);
+      if (!b) return;
+      if (b.type === 'arduino_setup' || b.type === 'arduino_loop') {
+        // Si ya hay otro del mismo tipo, borrar este
+        const others = workspace.getAllBlocks(false).filter(x => x.type === b.type && x.id !== b.id);
+        if (others.length) {
+          // Borrar el más nuevo
+          b.dispose(true);
+          alert(`Sólo se permite un bloque ${b.type.replace('arduino_','')}. Ya existe en el lienzo.`);
+        }
+      }
+    });
+  });
+}
+
+// Dentro de setupBlockly() DESPUÉS del inject(...):
+autoPlaceSetupLoop();
+preventDuplicates();
