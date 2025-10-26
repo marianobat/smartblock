@@ -34,3 +34,40 @@ Blockly.Blocks['analog_read_pin'] = {
     this.setColour(210);
   }
 };
+
+// Bloque "Al iniciar (setup)" — tope, único
+Blockly.Blocks['arduino_setup'] = {
+  init: function() {
+    this.appendDummyInput().appendField("Al iniciar (setup)");
+    this.appendStatementInput("DO").setCheck(null);
+    this.setColour("#D39D2A");
+    this.setTooltip("Código que corre una sola vez al iniciar.");
+    this.setHelpUrl("");
+    this.setDeletable(true);         // lo podés borrar, pero recomendación es dejarlo
+    this.setMovable(true);
+    this.setEditable(true);
+    // Que sea bloque tope
+    this.setPreviousStatement(false);
+    this.setNextStatement(false);
+
+    // Evitar múltiples instancias (marcar metadata)
+    this.data = "singleton:arduino_setup";
+  }
+};
+
+// Bloque "Por siempre (loop)" — tope, único
+Blockly.Blocks['arduino_loop'] = {
+  init: function() {
+    this.appendDummyInput().appendField("Por siempre (loop)");
+    this.appendStatementInput("DO").setCheck(null);
+    this.setColour("#D39D2A");
+    this.setTooltip("Código que se repite para siempre.");
+    this.setHelpUrl("");
+    this.setDeletable(true);
+    this.setMovable(true);
+    this.setEditable(true);
+    this.setPreviousStatement(false);
+    this.setNextStatement(false);
+    this.data = "singleton:arduino_loop";
+  }
+};
