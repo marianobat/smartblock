@@ -1,10 +1,45 @@
+// === Tema SmartBlock para Blockly ===
+const SmartBlockTheme = Blockly.Theme.defineTheme('smartblock', {
+  'base': Blockly.Themes.Classic, // podés probar "Zelos" también
+  'blockStyles': {
+    "loop_blocks": { "colourPrimary": "#FFB703" },
+    "logic_blocks": { "colourPrimary": "#219EBC" },
+    "math_blocks": { "colourPrimary": "#8ECAE6" },
+    "io_blocks": { "colourPrimary": "#FB8500" },
+  },
+  'categoryStyles': {
+    "loop_category": { "colour": "#FFB703" },
+    "logic_category": { "colour": "#219EBC" },
+    "math_category": { "colour": "#8ECAE6" },
+    "io_category": { "colour": "#FB8500" },
+  },
+  'componentStyles': {
+    'workspaceBackgroundColour': '#f7f8fa',
+    'toolboxBackgroundColour': '#ffffff',
+    'flyoutBackgroundColour': '#f0f0f0',
+    'flyoutOpacity': 0.8,
+    'scrollbarColour': '#c4c4c4',
+    'insertionMarkerColour': '#219EBC',
+    'insertionMarkerOpacity': 0.3,
+    'cursorColour': '#FFB703',
+  }
+});
+
+
 let workspace=null, port=null, writer=null, reader=null;
 function onError(e){ console.error(e); const log=document.getElementById('serial-log'); if(log){ log.textContent += '[ERROR] ' + (e?.message||e) + '\n'; } }
 function logSerial(msg){ const el=document.getElementById('serial-log'); if(!el) return; el.textContent += msg + '\n'; el.scrollTop = el.scrollHeight; }
 
 function setupBlockly(){
   if(!window.Blockly) throw new Error('Blockly no está disponible.');
-  workspace = Blockly.inject('blocklyDiv', { toolbox: document.getElementById('toolbox'), scrollbars:true, trashcan:true });
+  workspace = Blockly.inject('blocklyDiv', {
+    toolbox: document.getElementById('toolbox'),
+    theme: SmartBlockTheme,   // 👈 usa el tema que definiste arriba
+    renderer: 'zelos',        // (opcional) estilo de bloques redondeado
+    zoom: { controls: true, wheel: true },
+    trashcan: true,
+    scrollbars: true,
+  });
   const xmlText = `<xml xmlns="https://developers.google.com/blockly/xml">
   <block type="controls_repeat_ext" x="50" y="30">
     <value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
