@@ -109,7 +109,3 @@ h3 {
   stroke-width: 1px !important;
 }
 
-/* (Opcional) Asegurar buen contraste del texto dentro de bloques */
-.blocklyText {
-  fill: #ffffff !important;
-}
