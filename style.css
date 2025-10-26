@@ -109,3 +109,62 @@ h3 {
   stroke-width: 1px !important;
 }
 
+/* Fondo general oscuro */
+html, body {
+  background: #0b0b0b;   /* negro casi puro */
+  color: #eaeaea;        /* texto claro por defecto */
+}
+
+/* Header y panel derecho oscuros */
+header {
+  background: #111316;
+  border-bottom: 1px solid #262a30;
+  color: #eaeaea;
+}
+
+/* Área de trabajo (contiene el canvas de Blockly) */
+#blocklyDiv {
+  background: #0f1115;          /* workspace oscuro */
+  border: 1px solid #262a30;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+}
+
+/* Panel del código generado */
+#code {
+  background: #0f1115;          /* casi negro */
+  color: #e6e6e6;               /* gris claro (mejor contraste que “muy claro”) */
+  border: 1px solid #262a30;
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+/* Texto dentro de los bloques → blanco */
+.blocklyText {
+  fill: #ffffff !important;
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(0,0,0,0.25);
+}
+
+/* Toolbox más visible en oscuro */
+.blocklyToolboxDiv {
+  background: #0f1115 !important;
+}
+.blocklyToolboxDiv .blocklyTreeRow {
+  height: 42px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 3px 6px;
+}
+.blocklyToolboxDiv .blocklyTreeLabel { color: #ffffff !important; font-weight: 700; }
+.blocklyToolboxDiv .blocklyTreeRow:hover { background: #1a1e25 !important; }
+.blocklyToolboxDiv .blocklyTreeSelected { background: #1f2630 !important; }
+
+/* Flyout (panel de bloques) */
+.blocklyFlyoutBackground {
+  fill: #0b0e12 !important;
+  fill-opacity: 1 !important;
+  stroke: #1e232b !important;
+  stroke-width: 1px !important;
+}
