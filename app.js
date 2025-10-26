@@ -1,32 +1,20 @@
-// App web: Blockly + export .ino + WebSerial opcional
-let workspace = null;
-let port = null, writer = null, reader = null;
-
-function logSerial(msg){
-  const el = document.getElementById('serial-log');
-  el.textContent += msg + "\n";
-  el.scrollTop = el.scrollHeight;
-}
+let workspace=null, port=null, writer=null, reader=null;
+function onError(e){ console.error(e); const log=document.getElementById('serial-log'); if(log){ log.textContent += '[ERROR] ' + (e?.message||e) + '\n'; } }
+function logSerial(msg){ const el=document.getElementById('serial-log'); if(!el) return; el.textContent += msg + '\n'; el.scrollTop = el.scrollHeight; }
 
 function setupBlockly(){
-  workspace = Blockly.inject('blocklyDiv', {
-    toolbox: document.getElementById('toolbox'),
-    scrollbars: true,
-    trashcan: true
-  });
-
-  // Demo por defecto: blink LED13
-  const xmlText = `
-<xml xmlns="https://developers.google.com/blockly/xml">
+  if(!window.Blockly) throw new Error('Blockly no está disponible.');
+  workspace = Blockly.inject('blocklyDiv', { toolbox: document.getElementById('toolbox'), scrollbars:true, trashcan:true });
+  const xmlText = `<xml xmlns="https://developers.google.com/blockly/xml">
   <block type="controls_repeat_ext" x="50" y="30">
-    <value name="TIMES"><shadow type="math_number"><field name="NUM">100000</field></shadow></value>
+    <value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
     <statement name="DO">
       <block type="digital_write_pin">
         <field name="PIN">13</field><field name="STATE">HIGH</field>
-        <next><block type="delay_ms"><field name="MS">1000</field>
+        <next><block type="delay_ms"><field name="MS">500</field>
           <next><block type="digital_write_pin">
             <field name="PIN">13</field><field name="STATE">LOW</field>
-            <next><block type="delay_ms"><field name="MS">1000</field></block></next>
+            <next><block type="delay_ms"><field name="MS">500</field></block></next>
           </block></next>
         </block></next>
       </block>
@@ -38,10 +26,11 @@ function setupBlockly(){
 }
 
 function generateSketch(){
+  if(!window.Arduino) throw new Error('Generator Arduino no cargó (generator.js).');
+  if(!workspace) throw new Error('Workspace no inicializado');
   Arduino.init(workspace);
   const tops = workspace.getTopBlocks(true);
-  let body = '';
-  for (const b of tops) body += Arduino.blockToCode(b) || '';
+  let body=''; for(const b of tops){ const code=Arduino.blockToCode(b); body += Array.isArray(code)?code[0]:(code||''); }
   const final = Arduino.finish(body);
   document.getElementById('code').textContent = final;
   return final;
@@ -49,61 +38,27 @@ function generateSketch(){
 
 function downloadINO(name, content){
   const blob = new Blob([content], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
 
 async function connectSerial(){
-  if (!('serial' in navigator)) {
-    alert('Tu navegador no soporta WebSerial. Usa Chrome/Edge bajo HTTPS o localhost.');
-    return;
-  }
-  port = await navigator.serial.requestPort();
-  await port.open({ baudRate: 115200 });
-  writer = port.writable.getWriter();
-  reader = port.readable.getReader();
-  document.getElementById('port-label').textContent = 'conectado';
-
-  // loop de lectura
-  (async () => {
-    const decoder = new TextDecoder();
-    try {
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        if (value) logSerial(decoder.decode(value));
-      }
-    } catch (e) {
-      logSerial('Lectura detenida: ' + e.message);
-    }
-  })();
+  if(!('serial' in navigator)){ alert('Chrome/Edge y HTTPS/localhost son necesarios para WebSerial'); return; }
+  try{
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter(); reader = port.readable.getReader();
+    document.getElementById('port-label').textContent = 'conectado';
+    (async()=>{ const dec = new TextDecoder(); try{ while(true){ const {value,done}=await reader.read(); if(done) break; if(value) logSerial(dec.decode(value)); } } catch(e){ onError(e); } })();
+  }catch(e){ onError(e); }
 }
+async function sendSerial(cmd){ if(!writer){ alert('Conectá primero'); return; } const enc=new TextEncoder(); await writer.write(enc.encode(cmd.trim() + '\n')); logSerial('> '+cmd); }
 
-async function sendSerial(cmd){
-  if (!writer) { alert('Primero conecta'); return; }
-  const enc = new TextEncoder();
-  await writer.write(enc.encode(cmd.trim() + "\n"));
-  logSerial('> ' + cmd);
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  setupBlockly();
-
-  document.getElementById('btn-generate').addEventListener('click', generateSketch);
-  document.getElementById('btn-download').addEventListener('click', () => {
-    const sketch = generateSketch();
-    downloadINO('sketch.ino', sketch);
-  });
-  document.getElementById('btn-connect').addEventListener('click', connectSerial);
-  document.getElementById('serial-send').addEventListener('click', () => {
-    const cmd = document.getElementById('serial-input').value;
-    sendSerial(cmd);
-  });
-  document.getElementById('btn-test-led').addEventListener('click', async () => {
-    await sendSerial('W 13 H');
-    setTimeout(() => sendSerial('W 13 L'), 800);
-  });
+window.addEventListener('DOMContentLoaded', ()=>{
+  try{ setupBlockly(); }catch(e){ onError(e); }
+  const $=id=>document.getElementById(id);
+  $('btn-generate')?.addEventListener('click', ()=>{ try{ generateSketch(); }catch(e){ onError(e); } });
+  $('btn-download')?.addEventListener('click', ()=>{ try{ const s=generateSketch(); downloadINO('sketch.ino', s); }catch(e){ onError(e); } });
+  $('btn-connect')?.addEventListener('click', ()=>{ connectSerial(); });
+  $('serial-send')?.addEventListener('click', ()=>{ const cmd=$('serial-input')?.value||''; if(cmd) sendSerial(cmd); });
+  $('btn-test-led')?.addEventListener('click', async ()=>{ await sendSerial('W 13 H'); setTimeout(()=>sendSerial('W 13 L'), 600); });
 });

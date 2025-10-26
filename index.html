@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartBlock Web — Starter</title>
+  <title>SmartBlock Web — Starter (fix)</title>
   <link rel="stylesheet" href="./style.css"/>
-  <!-- Blockly CDN -->
-  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/blockly.min.js" defer></script>
+  <script src="https://unpkg.com/blockly/blocks.min.js" defer></script>
+  <script src="https://unpkg.com/blockly/msg/es.min.js" defer></script>
+  <script src="./blocks.js" defer></script>
+  <script src="./generator.js" defer></script>
+  <script src="./app.js" defer></script>
 </head>
 <body>
   <header>
     <div class="brand">
       <h1>SmartBlock <span class="tag">web</span></h1>
-      <p class="subtitle">Bloques → C++ → Export .ino · (Opcional) WebSerial en vivo</p>
+      <p class="subtitle">Bloques → C++ → Export .ino · WebSerial (opcional)</p>
     </div>
     <div class="actions">
       <button id="btn-generate">Generar código</button>
@@ -64,9 +68,5 @@
   <footer>
     <small>SmartBlock Web Starter · MIT</small>
   </footer>
-
-  <script src="./blocks.js"></script>
-  <script src="./generator.js"></script>
-  <script src="./app.js"></script>
 </body>
 </html>
