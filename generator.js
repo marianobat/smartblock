@@ -54,6 +54,22 @@ Arduino.valueToCode = function (block, name) {
   return code || '';
 };
 
+// Guarda contenidos del bloque setup en el "buffer" de setup
+Arduino['arduino_setup'] = function (block) {
+  const body = Arduino.statementToCode(block, 'DO') || '';
+  // Guardar el body como fragmento de setup (llaves y sangría los maneja Arduino.finish)
+  const key = 'user_setup_block';
+  Arduino.setups_[key] = body.replace(/^/gm, '  ');
+  return ''; // no emite nada a loop
+};
+
+// Devuelve el cuerpo del loop para que Arduino.finish lo inserte
+Arduino['arduino_loop'] = function (block) {
+  const body = Arduino.statementToCode(block, 'DO') || '';
+  // Devuelve el código; Arduino.scrub_ encadena si hay algo debajo (no debería)
+  return body.replace(/^/gm, '  ');
+};
+
 /* ===================== TUS BLOQUES ===================== */
 
 // escribir pin (digital)
